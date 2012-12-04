@@ -1,4 +1,4 @@
-UT_Course_Selection
+UT Courser Selection
 ===================
 
 UT Course Selection

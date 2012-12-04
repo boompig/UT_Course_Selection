@@ -1,0 +1,338 @@
+(dp1
+S'Academic Bridging Program'
+p2
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/wdw.html'
+p3
+sS'Contemporary Asian Studies'
+p4
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/asi.html'
+p5
+sS'Woodsworth College Courses'
+p6
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/wdw.html'
+p7
+sS'Philosophy'
+p8
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/phl.html'
+p9
+sS'Estonian'
+p10
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/sla.html'
+p11
+sS'University     College Courses'
+p12
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/uc.html'
+p13
+sS'Linguistics'
+p14
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/lin.html'
+p15
+sS'Biochemistry'
+p16
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/bch.html'
+p17
+sS'Centre for Ethics'
+p18
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ethic.html'
+p19
+sS'Italian'
+p20
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ita.html'
+p21
+sS'Religion'
+p22
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/rlg.html'
+p23
+sS'Actuarial Science'
+p24
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/stat.html'
+p25
+sS'Innis College Courses'
+p26
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/innis.html'
+p27
+sS'Forestry'
+p28
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/for.html'
+p29
+sS'Aboriginal     Studies'
+p30
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/asabs.html'
+p31
+sS'Art - Art History Courses'
+p32
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/far.html'
+p33
+sS'Sociology'
+p34
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/soc.html'
+p35
+sS'Music'
+p36
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/music.html'
+p37
+sS'Political Science'
+p38
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/pol.html'
+p39
+sS'Modern Hebrew'
+p40
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/rlg.html'
+p41
+sS'Mathematics'
+p42
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/mat.html'
+p43
+sS'Rotman     Commerce'
+p44
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/compg.html'
+p45
+sS'Planetary Science'
+p46
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ast.html'
+p47
+sS'New College Courses'
+p48
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/new.html'
+p49
+sS'Victoria College Courses'
+p50
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/vic.html'
+p51
+sS'Institute of History And Philsophy     Of Science'
+p52
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ihpst.html'
+p53
+sS'Spanish'
+p54
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/spa.html'
+p55
+sS'Anatomy'
+p56
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ana.html'
+p57
+sS'East Asian Studies'
+p58
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/eas.html'
+p59
+sS'Classics'
+p60
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/clas.html'
+p61
+sS'Centre for Comparative Literature'
+p62
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/col.html'
+p63
+sS'Hungarian'
+p64
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/hun.html'
+p65
+sS'Geology'
+p66
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/glg.html'
+p67
+sS'Statistics'
+p68
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/stat.html'
+p69
+sS'Near &amp; Middle Eastern Civilizations'
+p70
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/nmc.html'
+p71
+sS'Applied Mathematics'
+p72
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/mat.html'
+p73
+sS'First Year Learning Community'
+p74
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/artsc.html'
+p75
+sS'Computer Science'
+p76
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/csc.html'
+p77
+sS'French'
+p78
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/fre.html'
+p79
+sS'Pharmaceutical Chemistry'
+p80
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/phm.html'
+p81
+sS'Anthropology'
+p82
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ant.html'
+p83
+sS'Cell     and Systems Biology'
+p84
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/csb.html'
+p85
+sS'Public Health Science'
+p86
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/uc.html'
+p87
+sS'Peace, Conflict and Justice Studies'
+p88
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/glaf.html'
+p89
+sS'American Studies'
+p90
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/csus.html'
+p91
+sS'Astronomy'
+p92
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ast.html'
+p93
+sS'Nutritional Science'
+p94
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/nusci.html'
+p95
+sS'Art - Visual Studies Courses'
+p96
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/far.html'
+p97
+sS'Centre for Environment'
+p98
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/cfe.html'
+p99
+sS'Human     Biology'
+p100
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/hmb.html'
+p101
+sS'Immunology'
+p102
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/imm.html'
+p103
+sS'Finnish'
+p104
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/sla.html'
+p105
+sS'Ecology &amp; Evolutionary     Biology'
+p106
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/eeb.html'
+p107
+sS'Economics'
+p108
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/eco.html'
+p109
+sS'Molecular Genetics and Microbiology'
+p110
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/medgm.html'
+p111
+sS'Diaspora and Transnational Studies'
+p112
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/dts.html'
+p113
+sS'Drama'
+p114
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/uc.html'
+p115
+sS'English Language Learning'
+p116
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/new.html'
+p117
+sS'Cognitive Science'
+p118
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/phl.html'
+p119
+sS'Architecture'
+p120
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/arcla.html'
+p121
+sS'English'
+p122
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/eng.html'
+p123
+sS'Chemistry'
+p124
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/chm.html'
+p125
+sS'Physics'
+p126
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/phy.html'
+p127
+sS'Archaeology'
+p128
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ant.html'
+p129
+sS'History'
+p130
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/his.html'
+p131
+sS'First Year Seminars'
+p132
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/assem.html'
+p133
+sS'Trinity College Courses'
+p134
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/trin.html'
+p135
+sS'Canadian Institute for Theoretical Astronomy'
+p136
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/cita.html'
+p137
+sS'European Studies'
+p138
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ceres.html'
+p139
+sS'Pharmacology'
+p140
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/pcl.html'
+p141
+sS'Latin'
+p142
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/clas.html'
+p143
+sS'Greek'
+p144
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/clas.html'
+p145
+sS'German'
+p146
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ger.html'
+p147
+sS'South Asian Studies'
+p148
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/sas.html'
+p149
+sS'Centre for Jewish Studies'
+p150
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/cjs.html'
+p151
+sS'Latin American Studies'
+p152
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/las.html'
+p153
+sS'Physiology'
+p154
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/psl.html'
+p155
+sS'Slavic Languages And Literature'
+p156
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/sla.html'
+p157
+sS'Portuguese'
+p158
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/spa.html'
+p159
+sS'Laboratory Medicine and Pathobiology'
+p160
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/lmp.html'
+p161
+sS"St. Michael's College Courses"
+p162
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/smc.html'
+p163
+sS'Women and Gender Studies'
+p164
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/wgsi.html'
+p165
+sS'Psychology'
+p166
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/psy.html'
+p167
+sS'Geography'
+p168
+S'http://www.artsandscience.utoronto.ca/ofr/timetable/winter/ggr.html'
+p169
+s.
