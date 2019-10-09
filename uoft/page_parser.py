@@ -13,6 +13,7 @@ import re  # for soup matching
 import sqlite3
 import sys  # for exiting the program
 import traceback  # for tracing SQL exceptions
+from typing import Optional
 import urllib.error
 import urllib.parse
 import urllib.request  # for downloading web pages
@@ -30,7 +31,7 @@ pages_dir = "pages"
 # 	CODE			#
 #####################
 
-def get_functional_soup(all_soup, name: str):
+def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[BeautifulSoup]:
 	'''Given the entire web page soup and the name of the department, get a partial soup.
 	This will exclude the program description and professors, only including courses.
 	Also exclude standard university footer.
@@ -58,7 +59,7 @@ def get_functional_soup(all_soup, name: str):
 		return None
 
 
-def get_name(soup):
+def get_name(soup: BeautifulSoup) -> Optional[str]:
 	'''Given the HTML soup for a page, extract the department name and return it.
 	If cannot extract it, return None.
 	It is assumed to be the first h1 element on the page.'''
@@ -73,7 +74,7 @@ def get_name(soup):
 		return None
 
 
-def get_course_list(soup):
+def get_course_list(soup: BeautifulSoup) -> list:
 	'''Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses.'''
 
 	pattern = r"<a name=.?%s.?>*?</a>" % course_code_pattern
@@ -87,11 +88,11 @@ def get_course_list(soup):
 	return l
 
 
-def html_str_replace(html_string: str):
+def html_str_replace(html_string: str) -> str:
 	return html_string.replace("\\u2018", "'").replace("\\u2019", "'").replace("&nbsp;", " ")
 
 
-def get_course_info(html_string: str):
+def get_course_info(html_string: str) -> dict:
 	'''Course info is in the form of a dictionary.'''
 
 	d = {}
@@ -143,7 +144,7 @@ def get_course_info(html_string: str):
 
 	return d
 
-def make_table():
+def make_table() -> tuple:
 	'''Create the table if it doesn't exist, return a tuple with the cursor and connection object.
 	Primary key on course code.
 	'''
@@ -152,8 +153,8 @@ def make_table():
 	c = conn.cursor()
 	c.execute("CREATE TABLE IF NOT EXISTS courses (code VARCHAR, name VARCHAR, desc TEXT, Prerequisite VARCHAR, Corequisite VARCHAR, RecommendedPreparation VARCHAR, DistributionRequirementStatus VARCHAR, BreadthRequirement VARCHAR, Exclusion VARCHAR, lectimes VARCHAR, PRIMARY KEY (code))")
 	conn.commit()
-
 	return (c, conn)
+
 
 def confirm_add_to_table(d: dict, c, conn):
 	'''Confirm before adding the extracted info to the table.'''
@@ -169,7 +170,8 @@ def confirm_add_to_table(d: dict, c, conn):
 		# go again
 		confirm_add_to_table(d, c, conn)
 
-def add_info_to_table(d: dict, c, conn):
+
+def add_info_to_table(d: dict, c, conn) -> int:
 	'''Add information in d to the table.
 	Tries to avoid duplicate inserts.
 	d is a dict mapping table columns to values.
@@ -220,6 +222,7 @@ def add_course_page_info_to_table(page_file: str):
 	f = open(page_file, "r")
 	soup = BeautifulSoup(f.read())
 	name = get_name(soup)
+	assert name is not None
 	fsoup = get_functional_soup(soup, name)
 
 	num_inserts = 0 # keep track of the number of inserts made
@@ -292,10 +295,7 @@ def get_links_from_main_page() -> dict:
 if __name__ == "__main__":
 	# d = get_links_from_main_page()
 	assert os.path.exists(pages_dir), "%s directory does not exist" % pages_dir
-
-
 	inv = open("inventory.data", "rb")
 	d = pickler.load(inv)
 	inv.close() # close the main inventory file
-
 	add_all_course_pages_to_db(d)
