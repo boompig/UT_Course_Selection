@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>University of Toronto Course Selection</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app" class="container">
+        <div>
+            <h3>Dataset Stats</h3>
+            <!-- stats -->
+            <div v-if="coursesLoaded">
+                <p> Loaded {{ courses.length }} courses</p>
+            </div>
+            <div v-if="!coursesLoaded">
+                <p>Loading courses...</p>
+            </div>
+            <div v-if="offeringsLoaded">
+                <p> Loaded {{ offerings.length }} offerings</p>
+            </div>
+            <div v-if="!offeringsLoaded">
+                <p>Loading offerings...</p>
+            </div>
+        </div>
+
+        <form role="form" class="breadth-req-search-form" v-if="breadthReqs.length > 0">
+            <h2>Search by Breadth Requirement</h2>
+            <!-- <p>Loaded {{ breadthReqs.length}} breadth requirements</p> -->
+
+            <label for="breadth_req">Breadth Requirement</label>
+            <select name="breadth_req" v-model="breadthReq" required>
+                <option disabled="true" value="" selected="selected">please choose one</option>
+                <option v-for="req in breadthReqs" v-bind:value="req">{{ req }}</option>
+            </select>
+
+            <button type="button" class="btn btn-primary"
+            v-on:click="searchByBreadthReq($event)">Search</button>
+        </form>
+
+        <form role="form" class="distribution-req-search-form" v-if="distributionReqs.length > 0">
+            <h2>Search by Distribution Requirement</h2>
+
+            <label for="distribution_req">Distribution Requirement</label>
+            <select name="distribution_req" v-model="distributionReq" required>
+                <option disabled="true" value="" selected="selected">please choose one</option>
+                <option v-for="req in distributionReqs" v-bind:value="req">{{ req }}</option>
+            </select>
+
+            <button type="button" class="btn btn-primary"
+            v-on:click="searchByDistributionReq($event)">Search</button>
+        </form>
+
+
+        <div class="search-results" v-if="searchResults.length > 0">
+            <h2>Results</h2>
+
+            <div class="course" v-for="course in searchResults">
+                <span class="course-code">{{ course.code }}</span>&nbsp;-&nbsp;
+                <span class="course-name">{{ course.name }}</span>
+                <div class="course-desc">{{ course.desc }}</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/courses.vue.js"></script>
+</body>
+</html>

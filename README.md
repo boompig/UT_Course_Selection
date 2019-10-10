@@ -24,7 +24,19 @@ The scripts will download and parse HTML pages from the U of T timetable or cale
 
 **calendar_inventory.data** - map from name of program to a URL where the calendar for that program can be found
 
-**courses.db** - SQLite3 database that contains course and timetable information
+**courses.db** - SQLite3 database that contains course and timetable information.
+You can read the SQLite3 database contents using `sqlite3` tool or similar.
+It has 2 tables: couses and timetable
+
+### Server
+
+Please note that this is not the original server. The original server was written in PHP. I have no idea where that code is.
+
+```
+yarn install
+yarn start
+```
+
 
 ## Linting
 

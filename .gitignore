@@ -3,6 +3,9 @@ env
 __pycache__
 .mypy_cache
 
+# node
+node_modules
+
 # editor
 .vscode
 

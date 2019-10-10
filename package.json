@@ -1,0 +1,16 @@
+{
+  "name": "u-of-t-course-selection",
+  "version": "1.0.0",
+  "main": "server.js",
+  "repository": "git@github.com:boompig/UT_Course_Selection.git",
+  "author": "Daniel Kats <dbkats@cs.toronto.edu>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "bookshelf": "^1.0.1",
+    "express": "^4.17.1",
+    "knex": "^0.19.5",
+    "morgan": "^1.9.1",
+    "sqlite3": "^4.1.0"
+  }
+}
