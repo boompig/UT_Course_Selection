@@ -21,11 +21,12 @@ import urllib.request  # for downloading web pages
 from bs4 import BeautifulSoup
 
 #####################
-# 	KEY ITEMS		#
+# 	GLOBAL VARS		#
 #####################
 
 course_code_pattern = r"\w\w\w\d\d\d\w\d"
 pages_dir = "pages"
+DATA_FILE = "calendar_inventory.data"
 
 #####################
 # 	CODE			#
@@ -262,40 +263,43 @@ def get_links_from_main_page() -> dict:
 	Keys are department names, values are links.'''
 
 	page_file = "main.htm"
-	f = open(page_file, "r")
-	page_soup = BeautifulSoup(f.read())
+	# base = "http://www.artsandscience.utoronto.ca/ofr/calendar/"
+	with open(page_file, "r") as f:
+		page_soup = BeautifulSoup(f.read())
 
-	d = {}
-	base = "http://www.artsandscience.utoronto.ca/ofr/calendar/"
-	main_list = page_soup.find("div", attrs={"class": "items"}).find("ul", attrs={"class": "simple"})
-	link_elems = main_list.findAll("a")
+		d = {}
+		main_list = page_soup.find("div", attrs={"class": "items"}).find("ul", attrs={"class": "simple"})
+		link_elems = main_list.findAll("a")
 
-	for link in link_elems:
-		# find the name and url of each element
-		url = str(link["href"])
-		name = str(link.text).replace("/", "")
-		d[name] = url
+		for link in link_elems:
+			# find the name and url of each element
+			url = str(link["href"])
+			name = str(link.text).replace("/", "")
+			d[name] = url
 
-		# create a file for each entry
-		page = urllib.request.urlopen(url)
-		newpg = open("%s/%s.html" % (pages_dir, name), "w")
-		newpg.write(page.read())
-		newpg.close()
+			# create a file for each entry
+			page = urllib.request.urlopen(url)
+			newpg = open("%s/%s.html" % (pages_dir, name), "w")
+			newpg.write(page.read())
+			newpg.close()
 
-	# save the inventory of links
-	inv = open("inventory.data", "wb")
-	pickler.dump(d, inv)
-	inv.close() # close the main inventory file
-
-	f.close() # close the main HTML file
+		# save the inventory of links
+		inv = open(DATA_FILE, "wb")
+		pickler.dump(d, inv)
+		inv.close() # close the main inventory file
 
 	return d
 
 
 if __name__ == "__main__":
 	# d = get_links_from_main_page()
-	assert os.path.exists(pages_dir), "%s directory does not exist" % pages_dir
-	inv = open("inventory.data", "rb")
+
+	try:
+		os.makedirs(pages_dir)
+	except FileExistsError:
+		pass
+
+	inv = open(DATA_FILE, "rb")
 	d = pickler.load(inv)
 	inv.close() # close the main inventory file
 	add_all_course_pages_to_db(d)

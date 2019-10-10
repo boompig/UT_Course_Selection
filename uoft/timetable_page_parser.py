@@ -7,6 +7,7 @@
 # 	MODULES			#
 #####################
 
+import logging
 import os
 import pickle as pickler  # for saving inventory...
 import re  # for soup matching
@@ -15,15 +16,23 @@ import traceback  # for tracing SQL exceptions
 import urllib.error
 import urllib.parse
 import urllib.request  # for downloading web pages
+from typing import List, Optional
 
+import coloredlogs
+import requests
 from bs4 import BeautifulSoup
 
-#####################
-# 	KEY ITEMS		#
-#####################
+#########################
+# 	GLOBAL VARS			#
+#########################
+
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.DEBUG)
+coloredlogs.install(level=logging.DEBUG)
 
 course_code_pattern = r"\w\w\w\d\d\d\w\d"
-pages_dir = "tables"
+PAGES_DIR = "tables"
+DATA_FILE = "timetable_inventory.data"
 
 #########################
 # 	UTILITY FUNCTIONS	#
@@ -49,17 +58,19 @@ def html_to_str(html):
 
 
 
-class TimetableParser(object):
+class TimetableParser:
 	'''This object is used to extract information from the timetable webpage.'''
 
 	@staticmethod
-	def parse(page_file_path):
+	def parse(page_file_path: str) -> List[dict]:
 		'''The main method. Given a path to the web page, extract timetable info and return it as a list of dictionaries.'''
 
-		l = [] # container for dictionaries
+		logger.debug("Trying to parse file %s", page_file_path)
+
+		l = [] # type: List[dict]
 
 		page_file = open(page_file_path, "r")
-		soup = BeautifulSoup(page_file.read())
+		soup = BeautifulSoup(page_file.read(), features="html.parser")
 
 		dept_name = TimetableParser._get_department_name(soup)
 
@@ -97,7 +108,7 @@ class TimetableParser(object):
 		return l
 
 	@staticmethod
-	def _get_department_name(all_soup):
+	def _get_department_name(all_soup: BeautifulSoup) -> Optional[str]:
 		'''Given the HTML soup for a page, extract the department name and return it.
 		If cannot extract it, return None.
 		It is assumed to be the first h1 element on the page.'''
@@ -108,7 +119,8 @@ class TimetableParser(object):
 			m = re.search(r"(.*?)\s*?(\[\w\w\w courses.*?\])", txt)
 
 			if m:
-				return m.groups(1) # first group is name, second is code prefix
+				# first group is name, second is code prefix
+				return m.groups(1)  # type: ignore
 			else:
 				print("[ERROR] Could not match name and dept. code in %s" % txt)
 				return None
@@ -117,7 +129,7 @@ class TimetableParser(object):
 			return None
 
 	@staticmethod
-	def _get_functional_soup(all_soup, name):
+	def _get_functional_soup(all_soup: BeautifulSoup, name: str) -> BeautifulSoup:
 		'''Given the entire web page soup and the name of the department, get a partial soup.
 		This will exclude the program description and professors, only including courses.
 		Also exclude standard university footer.
@@ -258,7 +270,7 @@ class DBHelp(object):
 
 		return 1 # success
 
-def get_links_from_main_page(main_page_name):
+def get_links_from_main_page(main_page_name: str) -> dict:
 	'''Given the main timetable page, extract names and locations for links to subpages.'''
 
 	main_pg = open(main_page_name, "r")
@@ -284,7 +296,7 @@ def get_links_from_main_page(main_page_name):
 
 			# create a file for each entry
 			page = urllib.request.urlopen(url)
-			newpg = open("%s/%s.html" % (pages_dir, proper_name), "w")
+			newpg = open("%s/%s.html" % (PAGES_DIR, proper_name), "w")
 			newpg.write(page.read())
 			newpg.close()
 
@@ -293,7 +305,7 @@ def get_links_from_main_page(main_page_name):
 			print("[ERROR] Could not match proper name for %s" % repr(name))
 
 	# save the inventory of links
-	inv = open("timetable_inventory.data", "w")
+	inv = open(DATA_FILE, "wb")
 	pickler.dump(d, inv)
 	inv.close() # close the main inventory file
 	print("[TRACE] Inventoried all links")
@@ -302,7 +314,7 @@ def get_links_from_main_page(main_page_name):
 
 	return d
 
-def write_to_db(l, db):
+def write_to_db(l: list, db) -> int:
 	'''Given a list of rows to write to the database, write them.'''
 
 	num_inserts = 0
@@ -313,34 +325,46 @@ def write_to_db(l, db):
 
 	return num_inserts
 
-def read_write_pg(path):
+def read_write_pg(path: str):
 	l = TimetableParser.parse(path)
-	# print l[0]
 
 	db = DBHelp()
-
 	num_lines = write_to_db(l, db)
-	print("[TRACE] Wrote %d rows to DB" % num_lines)
-
+	logger.info("[TRACE] Wrote %d rows to DB", num_lines)
 	db.close()
 
 def read_write_all_links():
-	inv = open("timetable_inventory.data", "rb")
+	inv = open(DATA_FILE, "rb")
 	link_dict = pickler.load(inv)
 
-	for name in link_dict:
-		path = "%s/%s.html" % (pages_dir, name)
-		print("Processing courses for [%s] " % (name))
+	try:
+		os.makedirs(PAGES_DIR)
+	except FileExistsError:
+		pass
+
+	for name, url in link_dict.items():
+		if name[0] == "A":
+			continue
+		logger.info("Processing courses for %s; link= %s", name, url)
+		path = "%s/%s.html" % (PAGES_DIR, name)
+		if not os.path.exists(path):
+			# download the page
+			r = requests.get(url)
+			assert r.ok
+			contents = r.text
+			logger.info("Downloaded and saved page contents for course %s", name)
+			with open(path, "w") as fp:
+				fp.write(contents)
 		read_write_pg(path)
 
 	inv.close()
 
 if __name__ == "__main__":
 	# fname = "psych"
-	# path = "%s/%s.htm" % (pages_dir, fname)
+	# path = "%s/%s.htm" % (PAGES_DIR, fname)
 	# read_write_pg(path)
 
 	# d = get_links_from_main_page("timetable_main.htm")
 
-	assert os.path.exists(pages_dir), "%s directory does not exist" % pages_dir
+	# assert os.path.exists(PAGES_DIR), "%s directory does not exist" % PAGES_DIR
 	read_write_all_links()

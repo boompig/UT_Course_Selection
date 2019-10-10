@@ -5,3 +5,6 @@ __pycache__
 
 # editor
 .vscode
+
+# temporary data
+tables
