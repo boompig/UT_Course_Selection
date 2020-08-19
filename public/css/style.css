@@ -5,3 +5,16 @@
 .course {
     margin-top: 1rem;
 }
+
+form {
+    max-width: 768px;
+    margin-top: 1rem;
+}
+
+form button {
+    margin-top: .5rem;
+}
+
+.search-results {
+    margin-top: 1rem;
+}

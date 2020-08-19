@@ -1,10 +1,8 @@
-/**
- * Vue.js v3
- */
-
+/* global Vue */
+/* exported app */
 
 const app = new Vue({
-    el: "#app",
+    el: '#app',
     data: {
         courses: [],
         coursesLoaded: false,
@@ -21,36 +19,42 @@ const app = new Vue({
         searchResults: [],
 
         // model - selected by user
-        breadthReq: "",
-        distributionReq: "",
+        breadthReq: '',
+        distributionReq: '',
+
+        // visual
+        showTab: 'breadth',
     },
     methods: {
-        getDistributionReqMap: function() {
-            const start = "This is a ".length;
+        selectTab(type) {
+            this.showTab = type;
+        },
+        getDistributionReqMap() {
+            const start = 'This is a '.length;
             const reqs = this.courses.map((course) => {
                 let s = course.DistributionRequirementStatus;
-                if(s) {
+                if (s) {
                     s = s.substr(start);
-                    let end = s.indexOf(" course");
+                    const end = s.indexOf(' course');
                     s = s.substr(0, end);
                 }
                 return s;
             }).map((req) => {
-                if(req) {
-                    return req.split(" or ").filter((req) => {
-                        return req && req !== "TBA" && req !== "None";
+                if (req) {
+                    return req.split(' or ').filter((r) => {
+                        return r && r !== 'TBA' && r !== 'None';
                     });
                 } else {
                     return [];
                 }
             });
 
-            let reqMap = {};
-            for(let i = 0; i < this.courses.length; i++) {
-                let course = this.courses[i];
-                for(let j = 0; j < reqs[i].length; j++) {
-                    let req = reqs[i][j];
-                    if(!(req in reqMap)) {
+            const reqMap = {};
+            for (let i = 0; i < this.courses.length; i++) {
+                const course = this.courses[i];
+                for (let j = 0; j < reqs[i].length; j++) {
+                    const req = reqs[i][j];
+                    if (!(req in reqMap)) {
                         reqMap[req] = [];
                     }
                     reqMap[req].push(course);
@@ -59,17 +63,19 @@ const app = new Vue({
 
             return reqMap;
         },
-        getDistributionReqs: function() {
+        getDistributionReqs() {
             this.distributionReqMap = this.getDistributionReqMap();
-            return Object.keys(this.distributionReqMap);
+            const distributionReqs = Object.keys(this.distributionReqMap);
+            distributionReqs.sort();
+            return distributionReqs;
         },
-        getBreadthReqMap: function() {
+        getBreadthReqMap() {
             const reqs = this.courses.map((course) => {
-                if(course.BreadthRequirement) {
-                    return course.BreadthRequirement.split(" + ").map(req => {
+                if (course.BreadthRequirement) {
+                    return course.BreadthRequirement.split(' + ').map((req) => {
                         return req.trim();
-                    }).filter(req => {
-                        return req && req !== "None" && req !== "TBA";
+                    }).filter((req) => {
+                        return req && req !== 'None' && req !== 'TBA';
                     });
                 } else {
                     return [];
@@ -77,13 +83,13 @@ const app = new Vue({
             });
 
             const d = {};
-            for(let i = 0; i < this.courses.length; i++) {
-                let course = this.courses[i];
-                let requirements = reqs[i];
-                for(let j = 0; j < requirements.length; j++) {
-                    let req = requirements[j];
-                    if(!(req in d)) {
-                        d[req] = []
+            for (let i = 0; i < this.courses.length; i++) {
+                const course = this.courses[i];
+                const requirements = reqs[i];
+                for (let j = 0; j < requirements.length; j++) {
+                    const req = requirements[j];
+                    if (!(req in d)) {
+                        d[req] = [];
                     }
                     d[req].push(course);
                 }
@@ -92,16 +98,30 @@ const app = new Vue({
             return d;
         },
         /**
+         * @param {string} s
+         * @returns {number}
+         */
+        getBreadthReqsNumber(s) {
+            const match = s.match(/\((\d+)\)/);
+            return Number.parseInt(match[1], 10);
+        },
+        /**
          * Breadth requirements are not normalized in the database
          * So have to normalize them here
          */
-        getBreadthReqs: function() {
+        getBreadthReqs() {
             this.breadthReqMap = this.getBreadthReqMap();
-            return Object.keys(this.breadthReqMap);
+            const breadthRequirements = Object.keys(this.breadthReqMap);
+            const d = {};
+            breadthRequirements.forEach((s) => {
+                d[s] = this.getBreadthReqsNumber(s);
+            });
+            breadthRequirements.sort((a, b) => { return d[a] - d[b]; });
+            return breadthRequirements;
         },
-        getCourses: async function() {
-            const r = await window.fetch("/api/courses");
-            if(r.ok) {
+        async getCourses() {
+            const r = await window.fetch('/api/courses');
+            if (r.ok) {
                 this.coursesLoaded = true;
                 this.coursesError = null;
                 this.courses = await r.json();
@@ -116,9 +136,9 @@ const app = new Vue({
                 this.breadthReqs = [];
             }
         },
-        getOfferings: async function() {
-            const r = await window.fetch("/api/offerings");
-            if(r.ok) {
+        async getOfferings() {
+            const r = await window.fetch('/api/offerings');
+            if (r.ok) {
                 this.offeringsLoaded = true;
                 this.offeringsError = null;
                 this.offerings = await r.json();
@@ -128,23 +148,19 @@ const app = new Vue({
                 this.offerings = [];
             }
         },
-        searchByBreadthReq: function() {
+        searchByBreadthReq() {
             // search using the currently-selected breadth requirement
             this.searchResults = this.breadthReqMap[this.breadthReq];
-            this.searchResults.sort((a, b) => {
-                return a.code > b.code;
-            });
+            this.searchResults.sort((a, b) => { return a.code > b.code; });
         },
-        searchByDistributionReq: function() {
+        searchByDistributionReq() {
             // search using the currently-selected breadth requirement
             this.searchResults = this.distributionReqMap[this.distributionReq];
-            this.searchResults.sort((a, b) => {
-                return a.code > b.code;
-            });
-        }
+            this.searchResults.sort((a, b) => { return a.code > b.code; });
+        },
     },
     beforeMount() {
-        // async
+    // async
         this.getCourses();
 
         // async
