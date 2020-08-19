@@ -6,6 +6,9 @@
   "author": "Daniel Kats <dbkats@cs.toronto.edu>",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "lint": "eslint public/js/* server.js"
+  },
   "dependencies": {
     "bookshelf": "^1.0.1",
     "express": "^4.17.1",
