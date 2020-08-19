@@ -12,8 +12,12 @@
 </head>
 <body>
     <div id="app" class="container">
-        <div>
-            <h3 class="title">Dataset Stats</h3>
+        <h1 class="page-title">U of T Course Selection</h1>
+
+        <p>Find courses that satisfy your breadth/distribution requirements.</p>
+
+        <div class="dataset-stats" style="display: none;">
+            <h3>Dataset Stats</h3>
             <!-- stats -->
             <div v-if="coursesLoaded">
                 <p> Loaded {{ courses.length }} courses</p>
@@ -77,6 +81,10 @@
             </div>
         </div>
     </div>
+
+    <footer>
+        Written by Daniel Kats in 2012
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="js/courses.vue.js"></script>
