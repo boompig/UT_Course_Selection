@@ -133,7 +133,7 @@ def get_course_info(html_string: str) -> dict:
 			print("Broke on string %s" % repr(p_elems[0].text))
 
 	for k in other_keywords:
-		other_match = re.search("(%s:\s*)(.*?)<br />" % k, html_string)
+		other_match = re.search("(%s:\s*)(.*?)<br ?/?>" % k, html_string)
 
 		if other_match and len(other_match.groups()) == 2:
 			m = BeautifulSoup(other_match.group(2), "html.parser").text
@@ -308,7 +308,7 @@ def get_links_from_main_page() -> dict:
 
 def get_course_files(dir: str) -> List[str]:
 	l = []
-	for fname in os.listdir(dir):
+	for fname in sorted(os.listdir(dir)):
 		if fname.endswith(".html") or fname.endswith(".htm"):
 			l.append(os.path.join(dir, fname))
 	return l
