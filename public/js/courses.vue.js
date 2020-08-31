@@ -17,6 +17,8 @@ const app = new Vue({
         distributionReqs: [],
         distributionReqMap: {},
         searchResults: [],
+        searchType: null,
+        searchString: null,
 
         // model - selected by user
         breadthReq: '',
@@ -124,7 +126,16 @@ const app = new Vue({
             if (r.ok) {
                 this.coursesLoaded = true;
                 this.coursesError = null;
-                this.courses = await r.json();
+                const courses = await r.json();
+                this.courses = courses.sort((a, b) => {
+                    if (a.code > b.code) {
+                        return 1;
+                    } else if (a.code < b.code) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                });
 
                 this.breadthReqs = this.getBreadthReqs();
                 this.distributionReqs = this.getDistributionReqs();
@@ -150,13 +161,17 @@ const app = new Vue({
         },
         searchByBreadthReq() {
             // search using the currently-selected breadth requirement
+            // NOTE: breadthReqMap is already sorted by course code
             this.searchResults = this.breadthReqMap[this.breadthReq];
-            this.searchResults.sort((a, b) => { return a.code > b.code; });
+            this.searchType = 'Breadth Requirement';
+            this.searchString = this.breadthReq;
         },
         searchByDistributionReq() {
             // search using the currently-selected breadth requirement
+            // NOTE: distributionReqMap is already sorted by course code
             this.searchResults = this.distributionReqMap[this.distributionReq];
-            this.searchResults.sort((a, b) => { return a.code > b.code; });
+            this.searchType = 'Distribution Requirement';
+            this.searchString = this.distributionReq;
         },
     },
     beforeMount() {

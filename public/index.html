@@ -74,6 +74,8 @@
         <div class="search-results" v-if="searchResults.length > 0">
             <h2>Results</h2>
 
+            <p>Found {{ searchResults.length }} matching courses for {{ searchType }} "{{ searchString }}"</p>
+
             <div class="course" v-for="course in searchResults">
                 <span class="course-code">{{ course.code }}</span>&nbsp;-&nbsp;
                 <span class="course-name">{{ course.name }}</span>
