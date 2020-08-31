@@ -7,7 +7,8 @@
 # 	MODULES			#
 #####################
 
-# import os
+import logging
+import os
 import pickle as pickler  # for saving inventory...
 import re  # for soup matching
 import sqlite3
@@ -17,8 +18,10 @@ import urllib.error
 import urllib.parse
 import urllib.request  # for downloading web pages
 from argparse import ArgumentParser
+from pprint import pprint
 from typing import List, Optional
 
+import coloredlogs
 from bs4 import BeautifulSoup
 
 #####################
@@ -36,16 +39,25 @@ DB_PATH = "./data/archive-capture-2012-2013/courses-new.db"
 # 	CODE			#
 #####################
 
+
+class PageParsingError(Exception):
+	pass
+
+
 def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[BeautifulSoup]:
 	'''Given the entire web page soup and the name of the department, get a partial soup.
 	This will exclude the program description and professors, only including courses.
 	Also exclude standard university footer.
 	Remove junk characters from the soup.'''
 
-	top_sep = all_soup.find(text=re.compile("%s Courses" % name))
+	top_sep = all_soup.find(text="%s Courses" % name)
 	bottom_sep_node = all_soup.find("div", id="footer")
 
-	if top_sep and bottom_sep_node:
+	if top_sep is None:
+		raise PageParsingError("Could not find %s Courses as heading" % name)
+	elif bottom_sep_node is None:
+		raise PageParsingError("Could not find footer")
+	else:
 		top_sep_node = top_sep.parent
 
 		all_soup_str = html_str_replace(str(all_soup))
@@ -53,15 +65,7 @@ def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[Beautifu
 
 		top_gone = all_soup_str.split(str(top_sep_node))[1] # get the second (bottom) portion
 		bottom_gone = top_gone.split(str(bottom_sep_node))[0] # get the first (top) portion
-		return BeautifulSoup(bottom_gone)
-	else:
-		if top_sep is None:
-			print("[WARNING] Could not find %s Courses as heading" % name)
-		elif bottom_sep_node is None:
-			print("[WARNING] Could not find footer")
-
-		# could not separate
-		return None
+		return BeautifulSoup(bottom_gone, "html.parser")
 
 
 def get_name(soup: BeautifulSoup) -> Optional[str]:
@@ -74,7 +78,7 @@ def get_name(soup: BeautifulSoup) -> Optional[str]:
 	if len(heading_list) >= 1:
 		return str(heading_list[0].text)
 	else:
-		print("[WARNING] Could not find heading in soup")
+		logging.error("[WARNING] Could not find heading in soup")
 		# in the wrong format
 		return None
 
@@ -82,13 +86,14 @@ def get_name(soup: BeautifulSoup) -> Optional[str]:
 def get_course_list(soup: BeautifulSoup) -> List[str]:
 	'''Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses.'''
 
+	assert soup is not None
 	pattern = r"<a name=.?%s.?>*?</a>" % course_code_pattern
 	l = re.split(pattern, str(soup))
 
 	if len(l) == 1:
-		print("[WARNING] soup was not split")
-		print("Dumping soup:")
-		print(soup)
+		logging.error("soup was not split")
+		logging.error("Dumping soup:")
+		logging.error(soup)
 
 	return l
 
@@ -103,7 +108,7 @@ def get_course_info(html_string: str) -> dict:
 	d = {}
 
 	other_keywords = ["Prerequisite", "Exclusion", "Recommended Preparation", "Distribution Requirement Status", "Breadth Requirement"]
-	soup = BeautifulSoup(html_string)
+	soup = BeautifulSoup(html_string, "html.parser")
 	strong_elem = soup.find("span", attrs={"class" : "strong"})
 	p_elems = soup.findAll('p')
 
@@ -137,7 +142,7 @@ def get_course_info(html_string: str) -> dict:
 		other_match = re.search("(%s:\s*)(.*?)<br />" % k, html_string)
 
 		if other_match and len(other_match.groups()) == 2:
-			m = BeautifulSoup(other_match.group(2)).text
+			m = BeautifulSoup(other_match.group(2), "html.parser").text
 
 			try:
 				d[k.replace(" ", "")] = str(m)
@@ -222,7 +227,7 @@ def parse_course_page(page_file: str) -> List[dict]:
 	soup = None
 	name = None
 	with open(page_file) as fp:
-		soup = BeautifulSoup(fp.read())
+		soup = BeautifulSoup(fp.read(), "html.parser")
 		name = get_name(soup)
 		assert name is not None
 	fsoup = get_functional_soup(soup, name)
@@ -233,12 +238,7 @@ def parse_course_page(page_file: str) -> List[dict]:
 	return courses
 
 
-def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
-	'''Get all course info out of a single page.
-	Return number of inserts made.'''
-
-	courses = parse_course_page(page_file)
-
+def insert_courses_into_db(courses: List[dict], source_file: str, db_path: str) -> int:
 	# create/open the SQL DB
 	c, conn = make_table(db_path)
 
@@ -249,11 +249,20 @@ def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
 			# add gathered information into the table, if enough info gathered
 			num_inserts += add_info_to_table(d, c, conn)
 		else:
-			print("[WARNING] Could not find a name or code for a course")
+			logging.warning("Found a course without a name or course code. File: %s", source_file)
+			logging.warning("Course was %s", str(d))
 
 	conn.commit() # push all changes
 	c.close() # get rid of the cursor
 	return num_inserts
+
+
+def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
+	'''Get all course info out of a single page.
+	Return number of inserts made.'''
+
+	courses = parse_course_page(page_file)
+	return insert_courses_into_db(courses, page_file, db_path)
 
 
 def add_all_course_pages_to_db(inventory_dict: dict, db_path: str):
@@ -297,16 +306,75 @@ def get_links_from_main_page() -> dict:
 	return d
 
 
+
+def get_course_files(dir: str) -> List[str]:
+	l = []
+	for fname in os.listdir(dir):
+		if fname.endswith(".html") or fname.endswith(".htm"):
+			l.append(os.path.join(dir, fname))
+	return l
+
+
 if __name__ == "__main__":
 	parser = ArgumentParser()
 	parser.add_argument("--database", default=DB_PATH,
 		help="path to SQLite file to use")
 	parser.add_argument("-f", "--file",
 		help="File to parse")
+	parser.add_argument("-d", "--dir",
+		help="Parse all files in this directory")
+	parser.add_argument("-o", "--output", default="stdout",
+		choices=["stdout", "database"],
+		help="Where to output the parsed file. Default is stdout")
+	parser.add_argument("-v", "--verbose", action="store_true",
+		help="Use this flag for verbose output")
 	args = parser.parse_args()
 
+	log_level = (logging.DEBUG if args.verbose else logging.WARNING)
+	logging.basicConfig(level=log_level)
+	coloredlogs.install(log_level)
+
 	if args.file:
-		add_course_page_info_to_table(args.file, args.database)
+		try:
+			courses = parse_course_page(args.file)
+			if args.output == "stdout":
+				for course in courses:
+					pprint(course)
+			else:
+				num_inserts = insert_courses_into_db(courses, args.file, args.database)
+				print("Wrote %d new courses to database" % num_inserts)
+		except PageParsingError as e:
+			logging.error("Failed to parse file %s", args.file)
+			logging.error(e)
+			sys.exit(1)
+	elif args.dir:
+		blacklist = frozenset([
+			# this is an aggregation of courses by a few different departments
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Life Sciences.htm",
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - 199299398399.htm",
+			# this is an aggregation of courses by a few different departments
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Joint Courses.htm",
+			# no courses on this page
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Writing in the Faculty of Arts & Science.htm",
+			# this is an aggregation of courses by a few different departments
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Modern Languages and Literatures.htm",
+		])
+		for path in get_course_files(args.dir):
+			if path in blacklist:
+				logging.debug("Skipping blacklisted file: %s", path)
+				continue
+			try:
+				courses = parse_course_page(path)
+				if args.output == "stdout":
+					for course in courses:
+						pprint(course)
+				else:
+					num_inserts = insert_courses_into_db(courses, path, args.database)
+					print("Wrote %d new courses to database" % num_inserts)
+			except PageParsingError as e:
+				logging.error("Failed to parse file: %s", path)
+				logging.error(e)
+				sys.exit(1)
 	else:
 		print("nothing to do")
 
