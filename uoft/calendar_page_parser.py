@@ -45,10 +45,10 @@ class PageParsingError(Exception):
 
 
 def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[BeautifulSoup]:
-	'''Given the entire web page soup and the name of the department, get a partial soup.
+	"""Given the entire web page soup and the name of the department, get a partial soup.
 	This will exclude the program description and professors, only including courses.
 	Also exclude standard university footer.
-	Remove junk characters from the soup.'''
+	Remove junk characters from the soup."""
 
 	top_sep = all_soup.find(text="%s Courses" % name)
 	bottom_sep_node = all_soup.find("div", id="footer")
@@ -69,9 +69,9 @@ def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[Beautifu
 
 
 def get_name(soup: BeautifulSoup) -> Optional[str]:
-	'''Given the HTML soup for a page, extract the department name and return it.
+	"""Given the HTML soup for a page, extract the department name and return it.
 	If cannot extract it, return None.
-	It is assumed to be the first h1 element on the page.'''
+	It is assumed to be the first h1 element on the page."""
 
 	heading_list = soup('h1')
 
@@ -84,18 +84,14 @@ def get_name(soup: BeautifulSoup) -> Optional[str]:
 
 
 def get_course_list(soup: BeautifulSoup) -> List[str]:
-	'''Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses.'''
+	"""Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses."""
 
 	assert soup is not None
 	pattern = r"<a name=.?%s.?>*?</a>" % course_code_pattern
 	l = re.split(pattern, str(soup))
-
 	if len(l) == 1:
-		logging.error("soup was not split")
-		logging.error("Dumping soup:")
-		logging.error(soup)
-
-	return l
+		raise PageParsingError("Failed to find course anchors on page")
+	return l[1:]
 
 
 def html_str_replace(html_string: str) -> str:
@@ -103,7 +99,7 @@ def html_str_replace(html_string: str) -> str:
 
 
 def get_course_info(html_string: str) -> dict:
-	'''Course info is in the form of a dictionary.'''
+	"""Course info is in the form of a dictionary."""
 
 	d = {}
 
@@ -156,19 +152,22 @@ def get_course_info(html_string: str) -> dict:
 
 
 def make_table(db_path: str) -> tuple:
-	'''Create the table if it doesn't exist, return a tuple with the cursor and connection object.
+	"""Create the table if it doesn't exist, return a tuple with the cursor and connection object.
 	Primary key on course code.
-	'''
+	"""
 
 	conn = sqlite3.connect(db_path)
 	c = conn.cursor()
-	c.execute("CREATE TABLE IF NOT EXISTS courses (code VARCHAR, name VARCHAR, desc TEXT, Prerequisite VARCHAR, Corequisite VARCHAR, RecommendedPreparation VARCHAR, DistributionRequirementStatus VARCHAR, BreadthRequirement VARCHAR, Exclusion VARCHAR, lectimes VARCHAR, PRIMARY KEY (code))")
+	c.execute("""CREATE TABLE IF NOT EXISTS courses
+		(code VARCHAR, name VARCHAR, desc TEXT, Prerequisite VARCHAR, Corequisite VARCHAR, RecommendedPreparation VARCHAR,
+		DistributionRequirementStatus VARCHAR, BreadthRequirement VARCHAR, Exclusion VARCHAR, lectimes VARCHAR,
+		PRIMARY KEY (code))""")
 	conn.commit()
 	return (c, conn)
 
 
 def confirm_add_to_table(d: dict, c, conn) -> None:
-	'''Confirm before adding the extracted info to the table.'''
+	"""Confirm before adding the extracted info to the table."""
 
 	user_input = input("Put in row %s? " % d)
 	if user_input == "q":
@@ -183,11 +182,11 @@ def confirm_add_to_table(d: dict, c, conn) -> None:
 
 
 def add_info_to_table(d: dict, c, conn) -> int:
-	'''Add information in d to the table.
+	"""Add information in d to the table.
 	Tries to avoid duplicate inserts.
 	d is a dict mapping table columns to values.
 	c is a cursor object.
-	conn is a connection object.'''
+	conn is a connection object."""
 
 	if "code" in d:
 		code = d.pop("code")
@@ -258,8 +257,8 @@ def insert_courses_into_db(courses: List[dict], source_file: str, db_path: str) 
 
 
 def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
-	'''Get all course info out of a single page.
-	Return number of inserts made.'''
+	"""Get all course info out of a single page.
+	Return number of inserts made."""
 
 	courses = parse_course_page(page_file)
 	return insert_courses_into_db(courses, page_file, db_path)
@@ -274,8 +273,8 @@ def add_all_course_pages_to_db(inventory_dict: dict, db_path: str):
 
 
 def get_links_from_main_page() -> dict:
-	'''Return a dictionary of all the links found on the main page.
-	Keys are department names, values are links.'''
+	"""Return a dictionary of all the links found on the main page.
+	Keys are department names, values are links."""
 
 	page_file = "main.htm"
 	# base = "http://www.artsandscience.utoronto.ca/ofr/calendar/"
@@ -351,6 +350,7 @@ if __name__ == "__main__":
 		blacklist = frozenset([
 			# this is an aggregation of courses by a few different departments
 			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Life Sciences.htm",
+			# no courses on this page
 			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - 199299398399.htm",
 			# this is an aggregation of courses by a few different departments
 			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Joint Courses.htm",
@@ -358,6 +358,8 @@ if __name__ == "__main__":
 			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Writing in the Faculty of Arts & Science.htm",
 			# this is an aggregation of courses by a few different departments
 			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Modern Languages and Literatures.htm",
+			# this is an aggregation of courses by a few different departments
+			"data/archive-capture-2012-2013/calendar-files/2012-2013 Calendar - Biology.htm",
 		])
 		for path in get_course_files(args.dir):
 			if path in blacklist:
