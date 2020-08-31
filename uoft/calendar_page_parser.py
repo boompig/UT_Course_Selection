@@ -41,6 +41,14 @@ DB_PATH = "./data/archive-capture-2012-2013/courses-new.db"
 
 
 class PageParsingError(Exception):
+	"""Failed to parse basic structure of the page.
+	This means you can't extract *any* courses"""
+	pass
+
+
+class CourseParsingError(Exception):
+	"""Failed to parse information from a specific course
+	"""
 	pass
 
 
@@ -82,14 +90,42 @@ def get_name(soup: BeautifulSoup) -> str:
 
 
 def get_course_list(soup: BeautifulSoup) -> List[str]:
-	"""Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses."""
+	"""Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses.
+	Unfortunately the pages are not divided in any sane way (ex. grouped into divs).
+
+	Therefore we try to find course-code anchors.
+
+	Unfortunately there are some cases where the soup looks like this:
+
+	<strong>
+		<img src="./2012-2013 Calendar - Economics_files/new.gif" width="28" height="11" alt="NEW">
+		<a name="ECO463H1"></a>
+		ECO463H1  Financial Market Mircostructure  [24L/12T]
+	</strong>
+	"""
 
 	assert soup is not None
 	pattern = r"<a name=.?%s.?>*?</a>" % course_code_pattern
 	l = re.split(pattern, str(soup))
 	if len(l) == 1:
 		raise PageParsingError("Failed to find course anchors on page")
-	return l[1:]
+	blocks = []
+	next_block_strong = False
+	for block in l[1:]:
+		block = block.strip()
+		if next_block_strong:
+			# add strong at the beginning
+			block = "<strong>" + block
+
+		if block.endswith("<strong>"):
+			next_block_strong = True
+			# remove the strong tag
+			block = block[:-8]
+		else:
+			next_block_strong = False
+
+		blocks.append(block)
+	return blocks
 
 
 def html_str_replace(html_string: str) -> str:
@@ -103,11 +139,13 @@ def get_course_info(html_string: str) -> dict:
 
 	other_keywords = ["Prerequisite", "Exclusion", "Recommended Preparation", "Distribution Requirement Status", "Breadth Requirement"]
 	soup = BeautifulSoup(html_string, "html.parser")
-	strong_elem = soup.find("span", attrs={"class" : "strong"})
+	strong_elems = soup.find_all("span", attrs={"class": "strong"})
+	if strong_elems == []:
+		strong_elems = soup.find_all("strong")
 	p_elems = soup.findAll('p')
 
-	if strong_elem:
-		m = re.search("(%s)(\s*)(.*?)(\[(\d+\w/?)+\])?$" % course_code_pattern, str(strong_elem.text))
+	for strong_elem in strong_elems:
+		m = re.search(r"(%s)(\s*)(.*?)(\[(\d+\w/?)+\])?$" % course_code_pattern, str(strong_elem.text))
 
 		# first group catches course code
 		# third group catches name
@@ -120,11 +158,12 @@ def get_course_info(html_string: str) -> dict:
 			# re.groups() does not include group 0 (whole match)
 			if len(m.groups()) >= 4 and m.group(4) is not None:
 				d["lectimes"] = m.group(4).strip("[]")
-	else:
-		# print "[WARNING] Could not find strong span element with course name"
-		# print "Dumping soup"
-		# print soup
-		pass
+
+	if "code" not in d:
+		logging.warning("Failed to find course code in any of these elements:")
+		for strong_elem in strong_elems:
+			logging.warning(strong_elem.prettify())
+		raise CourseParsingError("Failed to find course code in HTML: %s" % soup.prettify())
 
 	if len(p_elems) > 0:
 		try:
@@ -145,6 +184,10 @@ def get_course_info(html_string: str) -> dict:
 				# can't print the error
 				# print "Could not parse %s" % m
 				pass
+
+	if "code" not in d:
+		logging.warning("Failed to find course code in soup:")
+		logging.warning(soup.prettify())
 
 	return d
 
@@ -232,7 +275,14 @@ def parse_course_page(page_file: str) -> List[dict]:
 	course_list = get_course_list(fsoup)
 	if len(course_list) == 0:
 		print("[WARNING] No courses found on page")
-	courses = [get_course_info(item) for item in course_list]
+	courses = []
+	for item in course_list:
+		try:
+			course = get_course_info(item)
+			courses.append(course)
+		except CourseParsingError as e:
+			logging.warning("Failed to parse course in file: %s", page_file)
+			logging.warning(e)
 	return courses
 
 
