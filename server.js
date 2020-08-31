@@ -4,13 +4,17 @@ My original implementation was using PHP
 However I find it easier to write in node now and I want to make this repo usable
 */
 
+// constants
+const PORT = 5050;
+const DB_FILE = './courses.db';
+
 // imports
 const express = require('express');
 const morgan = require('morgan');
 const knex = require('knex')({
     client: 'sqlite3',
     connection: {
-        filename: './courses.db',
+        filename: DB_FILE,
     },
 });
 const bookshelf = require('bookshelf')(knex);
@@ -24,9 +28,6 @@ const Course = bookshelf.model('Course', {
 const Offering = bookshelf.model('Offering', {
     tableName: 'timetable',
 });
-
-// globals
-const PORT = 5050;
 
 // app config
 app.use(morgan('dev'));
