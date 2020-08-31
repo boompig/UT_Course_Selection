@@ -7,16 +7,17 @@
 # 	MODULES			#
 #####################
 
-import os
+# import os
 import pickle as pickler  # for saving inventory...
 import re  # for soup matching
 import sqlite3
 import sys  # for exiting the program
 import traceback  # for tracing SQL exceptions
-from typing import Optional
 import urllib.error
 import urllib.parse
 import urllib.request  # for downloading web pages
+from argparse import ArgumentParser
+from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
@@ -27,6 +28,9 @@ from bs4 import BeautifulSoup
 course_code_pattern = r"\w\w\w\d\d\d\w\d"
 pages_dir = "pages"
 DATA_FILE = "calendar_inventory.data"
+DB_PATH = "./data/archive-capture-2012-2013/courses-new.db"
+# DB_PATH = "./courses.db"
+
 
 #####################
 # 	CODE			#
@@ -75,7 +79,7 @@ def get_name(soup: BeautifulSoup) -> Optional[str]:
 		return None
 
 
-def get_course_list(soup: BeautifulSoup) -> list:
+def get_course_list(soup: BeautifulSoup) -> List[str]:
 	'''Given a soup of course codes, course descriptions and such, return a list of sections that represent the courses.'''
 
 	pattern = r"<a name=.?%s.?>*?</a>" % course_code_pattern
@@ -145,19 +149,20 @@ def get_course_info(html_string: str) -> dict:
 
 	return d
 
-def make_table() -> tuple:
+
+def make_table(db_path: str) -> tuple:
 	'''Create the table if it doesn't exist, return a tuple with the cursor and connection object.
 	Primary key on course code.
 	'''
 
-	conn = sqlite3.connect("courses.db")
+	conn = sqlite3.connect(db_path)
 	c = conn.cursor()
 	c.execute("CREATE TABLE IF NOT EXISTS courses (code VARCHAR, name VARCHAR, desc TEXT, Prerequisite VARCHAR, Corequisite VARCHAR, RecommendedPreparation VARCHAR, DistributionRequirementStatus VARCHAR, BreadthRequirement VARCHAR, Exclusion VARCHAR, lectimes VARCHAR, PRIMARY KEY (code))")
 	conn.commit()
 	return (c, conn)
 
 
-def confirm_add_to_table(d: dict, c, conn):
+def confirm_add_to_table(d: dict, c, conn) -> None:
 	'''Confirm before adding the extracted info to the table.'''
 
 	user_input = input("Put in row %s? " % d)
@@ -212,32 +217,34 @@ def add_info_to_table(d: dict, c, conn) -> int:
 	else:
 		return 0 # failure
 
-def add_course_page_info_to_table(page_file: str):
+
+def parse_course_page(page_file: str) -> List[dict]:
+	soup = None
+	name = None
+	with open(page_file) as fp:
+		soup = BeautifulSoup(fp.read())
+		name = get_name(soup)
+		assert name is not None
+	fsoup = get_functional_soup(soup, name)
+	course_list = get_course_list(fsoup)
+	if len(course_list) == 0:
+		print("[WARNING] No courses found on page")
+	courses = [get_course_info(item) for item in course_list]
+	return courses
+
+
+def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
 	'''Get all course info out of a single page.
 	Return number of inserts made.'''
 
-	# create/open the SQL DB
-	c, conn = make_table()
+	courses = parse_course_page(page_file)
 
-	# get the functional soup
-	f = open(page_file, "r")
-	soup = BeautifulSoup(f.read())
-	name = get_name(soup)
-	assert name is not None
-	fsoup = get_functional_soup(soup, name)
+	# create/open the SQL DB
+	c, conn = make_table(db_path)
 
 	num_inserts = 0 # keep track of the number of inserts made
 
-	# a substep...
-	l = get_course_list(fsoup)
-
-	if len(l) == 0:
-		print("[WARNING] No courses found on page")
-
-	for item in l:
-		# this is the info extracted for one course
-		d = get_course_info(item)
-
+	for d in courses:
 		if "code" in d and "name" in d:
 			# add gathered information into the table, if enough info gathered
 			num_inserts += add_info_to_table(d, c, conn)
@@ -246,15 +253,14 @@ def add_course_page_info_to_table(page_file: str):
 
 	conn.commit() # push all changes
 	c.close() # get rid of the cursor
-	f.close() # close the file
-
 	return num_inserts
 
-def add_all_course_pages_to_db(inventory_dict: dict):
+
+def add_all_course_pages_to_db(inventory_dict: dict, db_path: str):
 	for name in inventory_dict:
 		fname = "%s/%s.htm" % (pages_dir, name)
 		print("Processing courses for [%s] " % (name))
-		n = add_course_page_info_to_table(fname)
+		n = add_course_page_info_to_table(fname, db_path)
 		print("Made %d inserts" % n)
 
 
@@ -292,14 +298,15 @@ def get_links_from_main_page() -> dict:
 
 
 if __name__ == "__main__":
-	# d = get_links_from_main_page()
+	parser = ArgumentParser()
+	parser.add_argument("--database", default=DB_PATH,
+		help="path to SQLite file to use")
+	parser.add_argument("-f", "--file",
+		help="File to parse")
+	args = parser.parse_args()
 
-	try:
-		os.makedirs(pages_dir)
-	except FileExistsError:
-		pass
+	if args.file:
+		add_course_page_info_to_table(args.file, args.database)
+	else:
+		print("nothing to do")
 
-	inv = open(DATA_FILE, "rb")
-	d = pickler.load(inv)
-	inv.close() # close the main inventory file
-	add_all_course_pages_to_db(d)
