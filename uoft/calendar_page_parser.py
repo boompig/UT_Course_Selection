@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request  # for downloading web pages
 from argparse import ArgumentParser
 from pprint import pprint
-from typing import List, Optional
+from typing import List
 
 import coloredlogs
 from bs4 import BeautifulSoup
@@ -44,7 +44,7 @@ class PageParsingError(Exception):
 	pass
 
 
-def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[BeautifulSoup]:
+def get_functional_soup(all_soup: BeautifulSoup, name: str) -> BeautifulSoup:
 	"""Given the entire web page soup and the name of the department, get a partial soup.
 	This will exclude the program description and professors, only including courses.
 	Also exclude standard university footer.
@@ -68,7 +68,7 @@ def get_functional_soup(all_soup: BeautifulSoup, name: str) -> Optional[Beautifu
 		return BeautifulSoup(bottom_gone, "html.parser")
 
 
-def get_name(soup: BeautifulSoup) -> Optional[str]:
+def get_name(soup: BeautifulSoup) -> str:
 	"""Given the HTML soup for a page, extract the department name and return it.
 	If cannot extract it, return None.
 	It is assumed to be the first h1 element on the page."""
@@ -78,9 +78,7 @@ def get_name(soup: BeautifulSoup) -> Optional[str]:
 	if len(heading_list) >= 1:
 		return str(heading_list[0].text)
 	else:
-		logging.error("[WARNING] Could not find heading in soup")
-		# in the wrong format
-		return None
+		raise PageParsingError("[WARNING] Could not find heading in soup")
 
 
 def get_course_list(soup: BeautifulSoup) -> List[str]:
@@ -223,6 +221,7 @@ def add_info_to_table(d: dict, c, conn) -> int:
 
 
 def parse_course_page(page_file: str) -> List[dict]:
+	assert page_file is not None
 	soup = None
 	name = None
 	with open(page_file) as fp:
@@ -260,6 +259,7 @@ def add_course_page_info_to_table(page_file: str, db_path: str) -> int:
 	"""Get all course info out of a single page.
 	Return number of inserts made."""
 
+	assert page_file is not None
 	courses = parse_course_page(page_file)
 	return insert_courses_into_db(courses, page_file, db_path)
 
@@ -314,6 +314,15 @@ def get_course_files(dir: str) -> List[str]:
 	return l
 
 
+def print_or_write(courses: List[dict], db_path: str, source_file: str, output: str = "stdout"):
+	if output == "database":
+		num_inserts = insert_courses_into_db(courses, source_file, db_path)
+		print("Parsed file %s. Wrote %d new courses to database" % (source_file, num_inserts))
+	else:
+		for course in courses:
+			pprint(course)
+
+
 if __name__ == "__main__":
 	parser = ArgumentParser()
 	parser.add_argument("--database", default=DB_PATH,
@@ -335,13 +344,9 @@ if __name__ == "__main__":
 
 	if args.file:
 		try:
+			assert args.file is not None
 			courses = parse_course_page(args.file)
-			if args.output == "stdout":
-				for course in courses:
-					pprint(course)
-			else:
-				num_inserts = insert_courses_into_db(courses, args.file, args.database)
-				print("Wrote %d new courses to database" % num_inserts)
+			print_or_write(courses, args.database, args.file, args.output)
 		except PageParsingError as e:
 			logging.error("Failed to parse file %s", args.file)
 			logging.error(e)
@@ -367,12 +372,7 @@ if __name__ == "__main__":
 				continue
 			try:
 				courses = parse_course_page(path)
-				if args.output == "stdout":
-					for course in courses:
-						pprint(course)
-				else:
-					num_inserts = insert_courses_into_db(courses, path, args.database)
-					print("Wrote %d new courses to database" % num_inserts)
+				print_or_write(courses, args.database, path, args.output)
 			except PageParsingError as e:
 				logging.error("Failed to parse file: %s", path)
 				logging.error(e)
